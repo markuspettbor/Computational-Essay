@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from numba import jit #This speeds up the simulation
+from mpl_toolkits.mplot3d import Axes3D
 
 # Parameters for plot attributes
 plt.rc("xtick", labelsize="large")
@@ -13,6 +14,7 @@ plt.rc("figure", figsize=(8,8))
 m_p = 1.67E-27       # mass of proton: kg
 qe = 1.602E-19        # charge of proton: C
 mu0 = np.pi * 4.0E-7 #mu_naught
+mu = 10000.0 * np.array([0.0, 0.0, 1.0]) # magnetic moment that points in the z direction
 
 # The jit command ensures fast execution using numba
 @jit
@@ -41,31 +43,32 @@ Y, Z = np.meshgrid(y,z) #turn this into a mesh
 ilen, jlen = np.shape(Y) #define the length of the dimensions, for use in iteration
 Bf = np.zeros((ilen,jlen,3)) #set the points to 0
 
+
 for i in range(0, ilen): #iterate through the grid, setting each point equal to the magnetic field value there
     for j in range(0, jlen):
         Bf[i,j] = B_bot(0.0, Y[i,j], Z[i,j])
-
+'''
 plt.streamplot(Y,Z, Bf[:,:,1], Bf[:,:,2]) #plot the magnetic field
 plt.xlim(-10.0,10.0)
 plt.ylim(-10.0,10.0)
 plt.xlabel("$y$")
 plt.ylabel("$z$")
 plt.title("Magnetic Field of a 'Magnetic Bottle'")
-
+plt.show()
+'''
 m = 4.0*m_p #mass of the alpha particle
 q = 2.0*qe #charge of the alpha particle
 QoverM = q/m
 
-dt = 1E-5 #small timestep
+dt = 1e-4 #small timestep
 
-t = np.arange(0.0, 1.0, dt) #create an array that will hold the times
-print((t))
+t = np.arange(0, 1, dt) #create an array that will hold the times
 rp = np.zeros((len(t), 3)) #create an array that will hold the position values
 vp = np.zeros((len(t), 3)) #create an array that will hold the velocity values
 
-v0 = 100.0 #set the initial velocity to 100 m/s
-rp[0,:] = np.array([0.0, -5.0, 0.0]) #initialize the position to y=-5, 5m above the lower dipole
-vp[0,:] = np.array([0.0, 0.0, v0]) #initialize the velocity to be in the z-direction
+v0 = 400
+rp[0,:] = np.array([0, -5, 1]) #initialize the position to y=-5, 5m above the lower dipole
+vp[0,:] = np.array([-v0,  0, 0*v0/10]) #initialize the velocity to be in the z-direction
 
 for it in np.arange(0, len(t)-1,1):
     Bp = B_bot(rp[it,0], rp[it, 1], rp[it,2]) #input the current particle position into the B_bot function to get the magnetic field
@@ -75,12 +78,20 @@ for it in np.arange(0, len(t)-1,1):
     if (np.sqrt(np.sum(rp[it+1]**2)) > 20.0): #If the particle escapes (goes more than 20m away from the origin) end the loop
         break
 
-
+fig  = plt.figure()
+ax = fig.gca(projection = '3d')
+ax.plot(rp[:,0], rp[:,1], rp[:,2])
+ax.set_xlabel('$x$')
+ax.set_ylabel('$y$')
+ax.set_zlabel('$z$')
+'''
 # now to make different views of the charged particle's trajectory
-plt.streamplot(Y,Z, Bf[:,:,1], Bf[:,:,2], color="black")
+#plt.streamplot(Y,Z, Bf[:,:,1], Bf[:,:,2], color="black")
 plt.plot(rp[:,1], rp[:,2])
 plt.xlim(-10.0,10.0)
 plt.ylim(-10.0,10.0)
 plt.xlabel("$y$")
 plt.ylabel("$z$")
 plt.title("Trajectory of Alpha Particle in a 'Magnetic Bottle'")
+'''
+plt.show()
