@@ -63,19 +63,20 @@ m = 4.0*m_p #mass of the alpha particle
 q = 2.0*qe #charge of the alpha particle
 QoverM = q/m
 
-dt = 1e-4 #small timestep
+scale = 1
+dt = 1e-4/scale #small timestep
 
-t = np.arange(0, 1, dt) #create an array that will hold the times
+t = np.arange(0, 100/scale, dt) #create an array that will hold the times
 rp = np.zeros((len(t), 3)) #create an array that will hold the position values
 vp = np.zeros((len(t), 3)) #create an array that will hold the velocity values
 
-v0 = 100
+v0 = 10
 rp[0,:] = np.array([0, -5, 1]) #initialize the position to y=-5, 5m above the lower dipole
 vp[0,:] = np.array([-v0,  0, 0*v0/10]) #initialize the velocity to be in the z-direction
 
 ei = -1
 for it in np.arange(0, len(t)-1,1):
-    Bp = B_bot(rp[it,0], rp[it, 1], rp[it,2]) #input the current particle position into the B_bot function to get the magnetic field
+    Bp = B_bot(rp[it,0], rp[it, 1], rp[it,2])*scale #input the current particle position into the B_bot function to get the magnetic field
     Ap = QoverM * np.cross(vp[it,:], Bp) #Calculate the magnetic force on the particle
     vp[it+1] = vp[it] + dt*Ap #Update the velocity of the particle based on this force
     rp[it+1] = rp[it] + dt*vp[it] #Update the positon of the particle based on this velocity
