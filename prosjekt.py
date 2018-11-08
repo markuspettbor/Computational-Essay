@@ -13,7 +13,7 @@ plt.rc("figure", figsize=(8,8))
 m_p = 1.67E-27       # mass of proton: kg
 qe = 1.602E-19        # charge of proton: C
 mu0 = np.pi * 4.0E-7 #mu_naught
-
+mu = 10000.0 * np.array([0.0, 0.0, 1.0]) # magnetic moment that points in the z direction
 # The jit command ensures fast execution using numba
 @jit
 def B_bot(x,y,z):
@@ -51,7 +51,7 @@ plt.ylim(-10.0,10.0)
 plt.xlabel("$y$")
 plt.ylabel("$z$")
 plt.title("Magnetic Field of a 'Magnetic Bottle'")
-
+plt.show()
 m = 4.0*m_p #mass of the alpha particle
 q = 2.0*qe #charge of the alpha particle
 QoverM = q/m
@@ -84,3 +84,4 @@ plt.ylim(-10.0,10.0)
 plt.xlabel("$y$")
 plt.ylabel("$z$")
 plt.title("Trajectory of Alpha Particle in a 'Magnetic Bottle'")
+plt.show()
