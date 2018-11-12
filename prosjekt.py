@@ -111,7 +111,7 @@ plt.title("Trajectory of Alpha Particle in a 'Magnetic Bottle'")
 plt.show()
 '''
 # Here begins our stuff
-'''
+
 def dB(a, b, z, phi, dphi, theta = 0):
     r = np.sqrt(a**2 +b**2 + z**2 - 2*a*b*np.cos(phi - theta))
     dB =  mu0*I/(4*np.pi*r**3)*(a**2 - a*b*np.cos(phi - theta))*dphi
@@ -120,19 +120,20 @@ def dB(a, b, z, phi, dphi, theta = 0):
 m_p = 1.67E-27        # mass of proton: kg
 qe = 1.602E-19        # charge of proton: C
 mu0 = np.pi * 4.0E-7  # mu_naught
-a = 3
-z = 1
+a = 100
+z = 5
 I = 1000 # foob
 theta = 0
 steps = 1000
 steps2 = 1000
 dphi = 2*np.pi/steps
-b_lin = np.linspace(0, 10, steps2)
+b_lin = np.linspace(0, 200, steps2)
 B = np.zeros(steps2)
 phi = 0
 
 for k in range(steps2):
     sum = 0
+    phi = 0
     for i in range(steps):
         phi = phi + dphi
         sum += dB(a, b_lin[k], z, phi, dphi, theta)
@@ -146,7 +147,7 @@ plt.show()
 # mv^2/b = qvB(I)
 # v = v0 + qvB*dt
 
-'''
+
 # Here there be memes
 
 @jit(nopython = True)
@@ -160,61 +161,75 @@ def Beta_func():
     qe = 1.602E-19        # charge of proton: C
     c = 299792458
     mu0 = np.pi * 4.0E-7  # mu_naught
-    a = 100 #10 cm
+    a = 100
     z = 5
-    I = 1000000 # foob
     theta = 0
-    steps = 1000
-    steps2 = 1000
-    dphi = 2*np.pi/steps
-    b_lin = np.linspace(0, 200, steps2)
-    phi = 0
-    time = np.linspace(0,5,2000)
+    steps = 10000
+    phi = np.linspace(0,2*np.pi,steps)
+    dphi = phi[1]-phi[0]
+    time = np.linspace(0,5,10000)
     dt = time[1] - time[0]
     Beta = np.zeros(time.shape)
-
+    I = np.zeros(time.shape)
     pos = np.zeros([len(time), 3])
     vel = np.zeros(pos.shape)
+    acc = np.zeros(pos.shape)
+    r = np.zeros(time.shape)
     steppi = 20
     moddus = int(len(time)/steppi)
-    pos[0] = np.array([50, 50, z/2])
+    pos[0] = np.array([75, 0, z/2])
+    r[0] = norm(pos[0,:-1])
     vel[0] = np.array([0, 1000, 0])
-    r = 50
-    print(r)
+    Beta[0] = np.sum(dBeta(a, r, z, phi, dphi, theta))
+    acc[0] = np.cross(qe*vel[0]*I[0]/m_p , np.array([0,0,Beta[0]]))
+    r_desire = r[0]
     for k in range(len(time)-1):
-        r = norm(pos[k,:-1])
-        sum = 0
-        phi = 0
-        for i in range(steps):
-            phi = phi + dphi
-            sum += dBeta(a, r, z, phi, dphi, theta)
-        Beta[k] = sum
-        I_need = m_p * 1/np.sqrt(1/norm(vel[k])**2 - 1/c**2) / (qe * r * Beta[k])
-        #I_need = 10
+        r[k] = norm(pos[k,:-1])
+        v = norm(vel[k:-1])
+        Beta[k] = np.sum(dBeta(a, r[k], z, phi, dphi, theta))
+
+
+        #v_radial = np.dot(pos[k,:-1]/r, vel[k,:-1])
+        #print(v_radial)
+        #factor = v_radial/v*0
+        I[k] = m_p * 1/np.sqrt(1/v**2 - 1/c**2) / (qe * r[k] * Beta[k])
+        if abs(I[k]) > 100:
+            I[k] = 100*I[k]/abs(I[k])
+        #I[k] = 10
         #print(norm(vel[k]))
-        acc = np.cross(qe*vel[k]*I_need/m_p , np.array([0,0,Beta[k]]))
-        vel[k+1] = vel[k] - acc*dt
-        pos[k+1] = pos[k] + vel[k+1]*dt
+
+        acc[k+1] = -np.cross(qe*vel[k]*I[k]/m_p , np.array([0,0,Beta[k]]))
+        pos[k+1] = pos[k] + vel[k]*dt + 0.5*acc[k]*dt**2
+        vel[k+1] = vel[k] + 0.5*(acc[k] + acc[k+1])*dt
+
+        #vel[k+1] = vel[k] + acc[k]*dt
+        #pos[k+1] = pos[k] + vel[k+1]*dt
+
         if k%moddus == 0:
-            print('%i of %i' %(k/moddus, steppi))
-    plt.plot(pos[:,0], pos[:,1])
+            print('%i of %i' %(k/moddus+1, steppi))
+    plt.plot(pos[:-1,0], pos[:-1,1])
     plt.axis('equal')
     plt.xlabel('x')
     plt.ylabel('y')
     plt.show()
-'''
+    plt.plot(time[:-1], I[:-1])
+    plt.title('I vs t')
+    plt.show()
+    plt.plot(r[:-1], Beta[:-1]*I[:-1])
+    plt.title('B vs r')
+    plt.show()
     #Beta_Interpol = interp1d(b_lin, Beta, kind = 'quadratic')
 
     #v = c*0.999999999999
 
     #I_need = m_p * 1/np.sqrt(1/v**2 - 1/c**2) / (qe * r * Beta_Interpol(r))
-
+    '''
     print('I needed', I_need)
-    plt.plot(b_lin, Beta_Interpol(b_lin))
+    plt.plot(
     print('B field at z = %f: %e' %(z, sum))
     print('B field from one coil: ', sum/2)  # Matches equivalent thing from hyperphysics calculator :)
     # http://hyperphysics.phy-astr.gsu.edu/hbase/magnetic/curloo.html
     plt.grid(True)
     plt.show()
-'''
+    '''
 Beta_func()
