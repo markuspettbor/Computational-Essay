@@ -59,6 +59,7 @@ plt.ylabel("$z$")
 plt.title("Magnetic Field of a 'Magnetic Bottle'")
 plt.show()
 '''
+'''
 m = 4.0*m_p #mass of the alpha particle
 q = 2.0*qe #charge of the alpha particle
 QoverM = q/m
@@ -95,6 +96,7 @@ ax.set_ylabel('$y$')
 ax.set_zlabel('$z$')
 
 '''
+'''
 # now to make different views of the charged particle's trajectory
 #plt.streamplot(Y,Z, Bf[:,:,1], Bf[:,:,2], color="black")
 plt.plot(rp[:,1], rp[:,2])
@@ -116,25 +118,29 @@ def dB(a, b, z, phi, dphi, theta = 0):
 m_p = 1.67E-27        # mass of proton: kg
 qe = 1.602E-19        # charge of proton: C
 mu0 = np.pi * 4.0E-7  # mu_naught
-a = 1
-b = 0
-z = 0.5
-I = 10 # foob
+a = 3
+z = 1
+I = 1000 # foob
 theta = 0
 steps = 1000
+steps2 = 1000
 dphi = 2*np.pi/steps
+b_lin = np.linspace(0, 10, steps2)
+B = np.zeros(steps2)
 phi = 0
-sum = 0
-thet = np.linspace(0, 2*np.pi, 20)
-phi = 0
-sum = 0
-for i in range(steps):
-    phi = phi + dphi
-    sum += dB(a, b, z, phi, dphi, theta)
+
+for k in range(steps2):
+    sum = 0
+    for i in range(steps):
+        phi = phi + dphi
+        sum += dB(a, b_lin[k], z, phi, dphi, theta)
+    B[k] = sum
+plt.plot(b_lin, B)
 print('B field at z = %f: %e' %(z, sum))
 print('B field from one coil: ', sum/2)  # Matches equivalent thing from hyperphysics calculator :)
 # http://hyperphysics.phy-astr.gsu.edu/hbase/magnetic/curloo.html
-
+plt.grid(True)
+plt.show()
 # mv^2/b = qvB(I)
 # v = v0 + qvB*dt
 
