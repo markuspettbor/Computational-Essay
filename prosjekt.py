@@ -105,3 +105,38 @@ plt.ylabel("$z$")
 plt.title("Trajectory of Alpha Particle in a 'Magnetic Bottle'")
 '''
 plt.show()
+
+# Here begins our stuff
+
+def dB(a, b, z, phi, dphi, theta = 0):
+    r = np.sqrt(a**2 +b**2 + z**2 - 2*a*b*np.cos(phi - theta))
+    dB =  mu0*I/(4*np.pi*r**3)*(a**2 - a*b*np.cos(phi - theta))*dphi
+    return 2*dB
+
+m_p = 1.67E-27        # mass of proton: kg
+qe = 1.602E-19        # charge of proton: C
+mu0 = np.pi * 4.0E-7  # mu_naught
+a = 1
+b = 0
+z = 0.5
+I = 10 # foob
+theta = 0
+steps = 1000
+dphi = 2*np.pi/steps
+phi = 0
+sum = 0
+thet = np.linspace(0, 2*np.pi, 20)
+phi = 0
+sum = 0
+for i in range(steps):
+    phi = phi + dphi
+    sum += dB(a, b, z, phi, dphi, theta)
+print('B field at z = %f: %e' %(z, sum))
+print('B field from one coil: ', sum/2)  # Matches equivalent thing from hyperphysics calculator :)
+# http://hyperphysics.phy-astr.gsu.edu/hbase/magnetic/curloo.html
+
+# mv^2/b = qvB(I)
+# v = v0 + qvB*dt
+
+
+# Here there be dragons
