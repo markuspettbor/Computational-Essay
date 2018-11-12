@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numba import jit #This speeds up the simulation
 from mpl_toolkits.mplot3d import Axes3D
+from scipy.interpolate import interp1d
+from numpy.linalg import norm
 
 # Parameters for plot attributes
 plt.rc("xtick", labelsize="large")
@@ -17,6 +19,7 @@ mu0 = np.pi * 4.0E-7 #mu_naught
 mu = 10000.0 * np.array([0.0, 0.0, 1.0]) # magnetic moment that points in the z direction
 
 # The jit command ensures fast execution using numba
+
 @jit
 def B_bot(x,y,z):
     zdisp = 10.0 #displacement of the two magnetic dipoles away from zero (one is at z = +zdisp, the other at -zdisp)
@@ -105,11 +108,10 @@ plt.ylim(-10.0,10.0)
 plt.xlabel("$y$")
 plt.ylabel("$z$")
 plt.title("Trajectory of Alpha Particle in a 'Magnetic Bottle'")
-'''
 plt.show()
-
+'''
 # Here begins our stuff
-
+'''
 def dB(a, b, z, phi, dphi, theta = 0):
     r = np.sqrt(a**2 +b**2 + z**2 - 2*a*b*np.cos(phi - theta))
     dB =  mu0*I/(4*np.pi*r**3)*(a**2 - a*b*np.cos(phi - theta))*dphi
@@ -144,5 +146,75 @@ plt.show()
 # mv^2/b = qvB(I)
 # v = v0 + qvB*dt
 
+'''
+# Here there be memes
 
-# Here there be dragons
+@jit(nopython = True)
+def dBeta(a, b, z, phi, dphi, theta = 0):
+    r = np.sqrt(a**2 +b**2 + z**2 - 2*a*b*np.cos(phi - theta))
+    dBeta =  mu0/(4*np.pi*r**3)*(a**2 - a*b*np.cos(phi - theta))*dphi
+    return 2*dBeta
+
+def Beta_func():
+    m_p = 1.67E-27        # mass of proton: kg
+    qe = 1.602E-19        # charge of proton: C
+    c = 299792458
+    mu0 = np.pi * 4.0E-7  # mu_naught
+    a = 100 #10 cm
+    z = 5
+    I = 1000000 # foob
+    theta = 0
+    steps = 1000
+    steps2 = 1000
+    dphi = 2*np.pi/steps
+    b_lin = np.linspace(0, 200, steps2)
+    phi = 0
+    time = np.linspace(0,5,2000)
+    dt = time[1] - time[0]
+    Beta = np.zeros(time.shape)
+
+    pos = np.zeros([len(time), 3])
+    vel = np.zeros(pos.shape)
+    steppi = 20
+    moddus = int(len(time)/steppi)
+    pos[0] = np.array([50, 50, z/2])
+    vel[0] = np.array([0, 1000, 0])
+    r = 50
+    print(r)
+    for k in range(len(time)-1):
+        r = norm(pos[k,:-1])
+        sum = 0
+        phi = 0
+        for i in range(steps):
+            phi = phi + dphi
+            sum += dBeta(a, r, z, phi, dphi, theta)
+        Beta[k] = sum
+        I_need = m_p * 1/np.sqrt(1/norm(vel[k])**2 - 1/c**2) / (qe * r * Beta[k])
+        #I_need = 10
+        #print(norm(vel[k]))
+        acc = np.cross(qe*vel[k]*I_need/m_p , np.array([0,0,Beta[k]]))
+        vel[k+1] = vel[k] - acc*dt
+        pos[k+1] = pos[k] + vel[k+1]*dt
+        if k%moddus == 0:
+            print('%i of %i' %(k/moddus, steppi))
+    plt.plot(pos[:,0], pos[:,1])
+    plt.axis('equal')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.show()
+'''
+    #Beta_Interpol = interp1d(b_lin, Beta, kind = 'quadratic')
+
+    #v = c*0.999999999999
+
+    #I_need = m_p * 1/np.sqrt(1/v**2 - 1/c**2) / (qe * r * Beta_Interpol(r))
+
+    print('I needed', I_need)
+    plt.plot(b_lin, Beta_Interpol(b_lin))
+    print('B field at z = %f: %e' %(z, sum))
+    print('B field from one coil: ', sum/2)  # Matches equivalent thing from hyperphysics calculator :)
+    # http://hyperphysics.phy-astr.gsu.edu/hbase/magnetic/curloo.html
+    plt.grid(True)
+    plt.show()
+'''
+Beta_func()
